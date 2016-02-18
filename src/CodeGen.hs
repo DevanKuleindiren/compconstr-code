@@ -108,6 +108,7 @@ standardEntry (MkLambdaForm fvs uf vs e) = do
     -- a more efficient implementation might leave them on the stack
     -- if possible
     -- YOUR CODE HERE
+    (args, p, v) <- loadArgs (0,0) vs
 
     -- compile the expression
     compExpr e
@@ -292,7 +293,9 @@ compAlgAltCont env (AAlt c vs e t) = do
 
     -- pattern variables will be on the heap
     -- YOUR CODE HERE
-
+    deallocateMemory (1 + length vs) -- The additional 1 is for the pointer into the info table
+    loadHeapArgs 1 vs
+     
     -- generate the code for the expression
     compExpr e
 
@@ -393,10 +396,9 @@ compExpr (CaseE e alts _) = do
 compExpr (AppE f as _) = do
     -- push arguments onto the appropriate stacks and adjust the stack
     -- pointers accordingly
-    let
-        (a, b) = pushArgs (0,0) as
-    adjustStack ValStk (a)
-    adjustStack PtrStk (b)
+    (v, p) <- pushArgs (0,0) (reverse as)
+    adjustStack ValStk (v)
+    adjustStack PtrStk (p)
 
     -- enter the closure pointed to by f
     withVar (varName f) $ \sym -> compEnter sym
