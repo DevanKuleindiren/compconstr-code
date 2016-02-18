@@ -393,13 +393,17 @@ compExpr (CaseE e alts _) = do
 compExpr (AppE f as _) = do
     -- push arguments onto the appropriate stacks and adjust the stack
     -- pointers accordingly
-    undefined
+    let
+        (a, b) = pushArgs (0,0) as
+    adjustStack ValStk (a)
+    adjustStack PtrStk (b)
 
     -- enter the closure pointed to by f
     withVar (varName f) $ \sym -> compEnter sym
 compExpr (CtrE c as _) = do
     -- obtain the return vector from the value stack
-    undefined
+    k <- loadRegisterFromStack RetVecR ValStk 0
+    adjustStack ValStk (-1)
 
     -- allocate a closure for the arguments
     unless (null as) $ do
@@ -407,7 +411,8 @@ compExpr (CtrE c as _) = do
         -- a pointer to the constructor's info table
         -- NOTE: the info table bit is not implemented, since it is slightly
         --       tricky -- see the note in the definition of `compAlgDefault'
-        undefined
+        allocMemory "_c" (1 + length as)
+        storeAtomsOnHeap (length as) as
 
         -- set the node register to the right location
         withVar "_c" $ \sym -> writeRegister NodeR sym
