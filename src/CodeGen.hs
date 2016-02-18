@@ -209,9 +209,13 @@ allocClosures (MkBind (Var n _) lf t : bs) = do
     -- on the STG heap and refer to it as `n'
     let
         s = closureSize lf
-
+        MkLambdaForm fvs _ _ _ = lf
+        
     -- YOUR CODE HERE
-
+    allocMemory n s
+    writeHeap s tbl
+    storeVarsOnHeap (s - 1) fvs
+    
     -- continue with the other bindings
     allocClosures bs
 
