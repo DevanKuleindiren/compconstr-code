@@ -421,18 +421,22 @@ compExpr (CtrE c as _) = do
         (Just i) -> jump (IndexSym (RegisterSym RetVecR) i)
 compExpr (OpE op [x,y] _) = do
     -- pop the continuation off the pointer stack
+    k <- loadLocalFromStack ValStk 0 "_k" (MonoTy $ AlgTy "_Cont")
+    adjustStack ValStk (-1)
 
     -- compile the operator application
-
+    compBuiltIn op x y
+    
     -- jump to the continuation
-    undefined
+    jump k
+    
 compExpr (LitE v _) = do
     -- pop the continuation off the pointer stack
     k <- loadLocalFromStack ValStk 0 "_k" (MonoTy $ AlgTy "_Cont")
     adjustStack ValStk (-1)
 
     -- set the return register value
-    -- returnVal v
+    returnVal v
 
     -- jump to the continuation
     jump k
